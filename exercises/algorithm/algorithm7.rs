@@ -3,13 +3,12 @@
 	This question requires you to use a stack to achieve a bracket match
 */
 
-// I AM NOT DONE
 #[derive(Debug)]
 struct Stack<T> {
 	size: usize,
 	data: Vec<T>,
 }
-impl<T> Stack<T> {
+impl<T:Copy> Stack<T> {
 	fn new() -> Self {
 		Self {
 			size: 0,
@@ -32,7 +31,16 @@ impl<T> Stack<T> {
 	}
 	fn pop(&mut self) -> Option<T> {
 		// TODO
-		None
+		match self.size {
+            0 => {
+                None
+            },
+            _ => {
+                let x = self.data.remove(self.size - 1);
+                self.size -= 1;
+                Some( x )
+            }
+        }
 	}
 	fn peek(&self) -> Option<&T> {
 		if 0 == self.size {
@@ -68,11 +76,11 @@ impl<T> Stack<T> {
 		iterator
 	}
 }
-struct IntoIter<T>(Stack<T>);
-impl<T: Clone> Iterator for IntoIter<T> {
+struct IntoIter<T:Copy>(Stack<T>);
+impl<T: Copy> Iterator for IntoIter<T> {
 	type Item = T;
 	fn next(&mut self) -> Option<Self::Item> {
-		if !self.0.is_empty() {
+		if !(self.0.is_empty()) {
 			self.0.size -= 1;self.0.data.pop()
 		} 
 		else {
@@ -98,11 +106,40 @@ impl<'a, T> Iterator for IterMut<'a, T> {
 		self.stack.pop()
 	}
 }
-
+use std::collections::HashMap;
 fn bracket_match(bracket: &str) -> bool
 {
-	//TODO
-	true
+    let mut hashmap: HashMap<char, char> = HashMap::new();
+    hashmap.insert('{', '}');hashmap.insert('}', '{');
+    hashmap.insert('[', ']');hashmap.insert(']', '[');
+    hashmap.insert('(', ')');hashmap.insert(')', '(');
+
+    let mut stack = Stack::<char>::new();
+    for ch in bracket.chars() {
+        if ch != '{' && ch != '}' && ch != '(' && ch != ')' && ch != '[' && ch != ']'{
+            continue;
+        }
+
+        let mut iter_copy = stack.iter();
+        match iter_copy.next(){
+            None => {
+                
+            },
+            Some(cc) => {
+                if let Some(an) = hashmap.get(cc){
+                    if *an == ch {
+                        stack.pop();
+                        continue;
+                    }
+                }
+            }
+        }
+        stack.push(ch);
+    }
+    if stack.is_empty(){
+        return true;
+    }
+    return false;
 }
 
 #[cfg(test)]
